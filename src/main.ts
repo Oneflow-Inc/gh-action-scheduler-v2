@@ -70,12 +70,13 @@ const num_in_progress_runs =
     if (workflow_runs.length == 0) {
       console.log('no workflow runs found for', statuses)
       console.log('start querying 100 workflow runs')
-      const workflow_runs = (await octokit
-        .request(
-          'GET /repos/{owner}/{repo}/actions/runs',
-          { owner: owner, repo: repo, per_page: 100 })
-        .then(r => r.data.workflow_runs))
-        .filter(w => statuses.includes(w.status! as Status))
+      const test_workflow_id = "test.yml"
+      await octokit.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
+        owner: owner,
+        repo: repo,
+        workflow_id: test_workflow_id,
+        per_page: 30,
+      }).then((r => r.data.workflow_runs.filter(w => statuses.includes(w.status! as Status))))
       console.log('found', workflow_runs.length, 'workflow runs in last 100')
     }
     const is_running_list = await Promise.all(workflow_runs.map(
@@ -107,9 +108,9 @@ async function start() {
   while (i < max_try) {
     i += 1;
     console.log('trying', i, '/', max_try)
-    const num = 100000
+    var num = 100000
     try {
-      const num = await num_in_progress_runs(['in_progress', 'queued'])
+      num = await num_in_progress_runs(['in_progress', 'queued'])
     } catch (error) {
       console.log(error)
       continue
