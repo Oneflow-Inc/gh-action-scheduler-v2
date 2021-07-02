@@ -93,11 +93,11 @@ const sleep = __webpack_require__(1669).promisify(setTimeout);
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         let i = 0;
-        const max_try = 20;
+        const is_ci = process.env.CI_PERSONAL_ACCESS_TOKEN;
+        const max_try = is_ci ? 20 : 2;
         const timeout_minutes = 1;
         let max_num_parallel = 1;
         while (i < max_try) {
-            i += 1;
             var num = 100000;
             try {
                 num = yield num_in_progress_runs(['in_progress', 'queued']);
@@ -107,7 +107,7 @@ function start() {
                 continue;
             }
             finally {
-                console.log('trying', i, '/', max_try);
+                console.log('try', i + 1, '/', max_try);
                 console.log('runs:', num, ',', 'max:', max_num_parallel);
                 if (num < max_num_parallel) {
                     return; // success
@@ -116,6 +116,7 @@ function start() {
                 yield sleep(timeout * 1000);
                 console.log('timeout', timeout, 's');
             }
+            i += 1;
         }
     });
 }
