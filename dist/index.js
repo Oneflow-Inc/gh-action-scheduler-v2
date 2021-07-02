@@ -93,8 +93,8 @@ const sleep = __webpack_require__(1669).promisify(setTimeout);
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         let i = 0;
-        const is_ci = process.env.CI_PERSONAL_ACCESS_TOKEN;
-        const max_try = is_ci ? 20 : 2;
+        const is_ci = process.env.CI;
+        const max_try = is_ci ? 25 : 2;
         const timeout_minutes = 1;
         let max_num_parallel = 1;
         while (i < max_try) {
@@ -104,7 +104,6 @@ function start() {
             }
             catch (error) {
                 console.log(error);
-                continue;
             }
             finally {
                 console.log('try', i + 1, '/', max_try);
