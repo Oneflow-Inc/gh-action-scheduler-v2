@@ -43,7 +43,7 @@ const is_occupying_gpu = (wr) => __awaiter(void 0, void 0, void 0, function* () 
     console.log(wr.html_url);
     var table = new Table();
     r.data.jobs.map((j, job_i) => table.push([
-        j.name, j.status
+        j.name, j.status, is_gpu_job(j) ? "GPU" : "-"
     ]));
     console.log(table.toString());
     const jobs_in_progress = r.data.jobs.filter(j => is_gpu_job(j) && j.status == 'in_progress');

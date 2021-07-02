@@ -34,10 +34,10 @@ const is_occupying_gpu = async (wr: any) => {
   console.log(wr.html_url)
   var table = new Table();
   r.data.jobs.map((j, job_i) => table.push([
-    j.name, j.status
+    j.name, j.status, is_gpu_job(j) ? "GPU" : "-"
   ]));
   console.log(table.toString());
-  const jobs_in_progress =
+  const gpu_jobs_in_progress =
     r.data.jobs.filter(j => is_gpu_job(j) && j.status == 'in_progress');
   const jobs_all_queued =
     r.data.jobs.filter(j => is_gpu_job(j))
@@ -45,7 +45,7 @@ const is_occupying_gpu = async (wr: any) => {
   const schedule_job = r.data.jobs.find(j => j.name == 'Wait for GPU slots');
   const has_passed_scheduler =
     (schedule_job && schedule_job.status == 'completed') && jobs_all_queued;
-  return has_passed_scheduler || jobs_in_progress.length > 0;
+  return has_passed_scheduler || gpu_jobs_in_progress.length > 0;
 };
 
 // TODO: refactor into in_progress_runs_larger_that(1)
