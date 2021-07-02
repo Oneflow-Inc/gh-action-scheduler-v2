@@ -46,12 +46,12 @@ const is_occupying_gpu = (wr) => __awaiter(void 0, void 0, void 0, function* () 
         j.name, j.status, is_gpu_job(j) ? "GPU" : "-"
     ]));
     console.log(table.toString());
-    const jobs_in_progress = r.data.jobs.filter(j => is_gpu_job(j) && j.status == 'in_progress');
+    const gpu_jobs_in_progress = r.data.jobs.filter(j => is_gpu_job(j) && j.status == 'in_progress');
     const jobs_all_queued = r.data.jobs.filter(j => is_gpu_job(j))
         .every(j => j.status == 'queued' || j.status == 'in_progress');
     const schedule_job = r.data.jobs.find(j => j.name == 'Wait for GPU slots');
     const has_passed_scheduler = (schedule_job && schedule_job.status == 'completed') && jobs_all_queued;
-    return has_passed_scheduler || jobs_in_progress.length > 0;
+    return has_passed_scheduler || gpu_jobs_in_progress.length > 0;
 });
 const num_in_progress_runs = function (statuses) {
     return __awaiter(this, void 0, void 0, function* () {
