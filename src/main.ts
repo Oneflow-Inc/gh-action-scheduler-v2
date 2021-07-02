@@ -107,7 +107,6 @@ async function start() {
   let max_num_parallel = 1
   while (i < max_try) {
     i += 1;
-    console.log('trying', i, '/', max_try)
     var num = 100000
     try {
       num = await num_in_progress_runs(['in_progress', 'queued'])
@@ -115,6 +114,7 @@ async function start() {
       console.log(error)
       continue
     } finally {
+      console.log('trying', i, '/', max_try)
       console.log('runs:', num, ',', 'max:', max_num_parallel)
       if (num < max_num_parallel) {
         return;  // success
