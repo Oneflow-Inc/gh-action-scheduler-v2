@@ -103,7 +103,7 @@ const sleep = require('util').promisify(setTimeout)
 async function start() {
   let i = 0;
   const is_ci = process.env.CI
-  const max_try = is_ci ? 27 : 2
+  const max_try = is_ci ? 40 : 2
   const timeout_minutes = 1
   let max_num_parallel = 1
   while (i < max_try) {
