@@ -103,7 +103,7 @@ const sleep = require('util').promisify(setTimeout)
 async function start() {
   let i = 0;
   const is_ci = process.env.CI
-  const max_try = is_ci ? 20 : 2
+  const max_try = is_ci ? 25 : 2
   const timeout_minutes = 1
   let max_num_parallel = 1
   while (i < max_try) {
@@ -112,7 +112,6 @@ async function start() {
       num = await num_in_progress_runs(['in_progress', 'queued'])
     } catch (error) {
       console.log(error)
-      continue
     } finally {
       console.log('try', i + 1, '/', max_try)
       console.log('runs:', num, ',', 'max:', max_num_parallel)
