@@ -102,7 +102,7 @@ const sleep = require('util').promisify(setTimeout)
 
 async function start() {
   let i = 0;
-  const max_try = 20
+  const max_try = 2
   const timeout_minutes = 1
   let max_num_parallel = 1
   while (i < max_try) {
@@ -114,7 +114,7 @@ async function start() {
       console.log(error)
       continue
     } finally {
-      console.log('trying', i, '/', max_try)
+      console.log('try', i, '/', max_try)
       console.log('runs:', num, ',', 'max:', max_num_parallel)
       if (num < max_num_parallel) {
         return;  // success
