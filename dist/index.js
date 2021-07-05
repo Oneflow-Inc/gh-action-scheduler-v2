@@ -32,6 +32,9 @@ function is_gpu_job(j) {
     return (['CPU', 'CUDA', 'XLA'].includes(j.name) || j.name == 'CUDA, XLA, CPU' ||
         j.name.startsWith('CUDA, XLA, CPU') || (j.name.startsWith('Test suite') && (j.name.includes("cuda") || j.name.includes("xla"))));
 }
+function is_test_suite_job(j) {
+    return j.name.startsWith('Test suite');
+}
 const is_occupying_gpu = (wr) => __awaiter(void 0, void 0, void 0, function* () {
     const r = yield octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs', { owner: owner, repo: repo, run_id: wr.id });
     var pull_requests = wr.pull_requests;
@@ -50,7 +53,9 @@ const is_occupying_gpu = (wr) => __awaiter(void 0, void 0, void 0, function* () 
     const jobs_all_queued = r.data.jobs.filter(j => is_gpu_job(j))
         .every(j => j.status == 'queued' || j.status == 'in_progress');
     const schedule_job = r.data.jobs.find(j => j.name == 'Wait for GPU slots');
-    const has_passed_scheduler = (schedule_job && schedule_job.status == 'completed') && jobs_all_queued;
+    const test_suite_job_completed = r.data.jobs.filter(j => is_test_suite_job(j) && j.status == 'completed');
+    const test_suite_job_all = r.data.jobs.filter(j => is_test_suite_job(j));
+    const has_passed_scheduler = (schedule_job && schedule_job.status == 'completed') && jobs_all_queued && test_suite_job_completed.length != test_suite_job_all.length;
     return has_passed_scheduler || gpu_jobs_in_progress.length > 0;
 });
 const num_in_progress_runs = function (statuses) {
