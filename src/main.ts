@@ -20,6 +20,7 @@ function is_gpu_job(j: components['schemas']['job']): Boolean {
     j.name === 'CUDA, XLA, CPU' ||
     j.name.startsWith('CUDA, XLA, CPU') ||
     (j.name.startsWith('Test suite') &&
+      j.name.startsWith('Distributed test suite') &&
       (j.name.includes('cuda') || j.name.includes('xla')))
   )
 }
