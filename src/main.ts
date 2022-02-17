@@ -3,6 +3,8 @@ import * as util from 'util'
 import Table from 'cli-table3'
 import {Octokit} from '@octokit/core'
 import {components} from '@octokit/openapi-types/types'
+import {Endpoints} from '@octokit/types/dist-types/generated/Endpoints'
+
 const token = process.env.CI_PERSONAL_ACCESS_TOKEN
 if (!token) {
   core.setFailed('required CI_PERSONAL_ACCESS_TOKEN')
@@ -60,27 +62,13 @@ async function is_occupying_gpu(
     schedule_job &&
     schedule_job.status === 'completed' &&
     jobs_all_queued &&
-    test_suite_job_completed.length != test_suite_job_all.length
+    test_suite_job_completed.length !== test_suite_job_all.length
 
   return has_passed_scheduler || gpu_jobs_in_progress.length > 0
 }
 
 // TODO: refactor into in_progress_runs_larger_that(1)
-type Status =
-  | 'completed'
-  | 'queued'
-  | 'in_progress'
-  | 'action_required'
-  | 'cancelled'
-  | 'failure'
-  | 'neutral'
-  | 'skipped'
-  | 'stale'
-  | 'success'
-  | 'timed_out'
-  | 'requested'
-  | 'waiting'
-  | undefined
+type Status = Endpoints['GET /repos/{owner}/{repo}/actions/runs']['parameters']['status']
 
 async function num_in_progress_runs(statuses: Status[]): Promise<number> {
   let workflow_runs = (
