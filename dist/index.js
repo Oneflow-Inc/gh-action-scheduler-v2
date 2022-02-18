@@ -7,6 +7,25 @@ module.exports =
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,118 +35,126 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__webpack_require__(2186));
+const util = __importStar(__webpack_require__(1669));
+const cli_table3_1 = __importDefault(__webpack_require__(2101));
 const core_1 = __webpack_require__(6762);
 const token = process.env.CI_PERSONAL_ACCESS_TOKEN;
 if (!token) {
-    const core = __webpack_require__(2186);
-    core.setFailed("required CI_PERSONAL_ACCESS_TOKEN");
+    core.setFailed('required CI_PERSONAL_ACCESS_TOKEN');
     process.exit(1);
 }
 const octokit = new core_1.Octokit({ auth: token });
 const owner = 'Oneflow-Inc';
 const repo = 'oneflow';
-var Table = __webpack_require__(2101);
 function is_gpu_job(j) {
-    return (['CPU', 'CUDA', 'XLA'].includes(j.name) || j.name == 'CUDA, XLA, CPU' ||
-        j.name.startsWith('CUDA, XLA, CPU') || (j.name.startsWith('Test suite') && (j.name.includes("cuda") || j.name.includes("xla"))));
+    return (['CPU', 'CUDA', 'XLA'].includes(j.name) ||
+        j.name === 'CUDA, XLA, CPU' ||
+        j.name.startsWith('CUDA, XLA, CPU') ||
+        ((j.name.startsWith('Test suite') ||
+            j.name.startsWith('Distributed test suite')) &&
+            (j.name.includes('cuda') || j.name.includes('xla'))));
 }
 function is_test_suite_job(j) {
     return j.name.startsWith('Test suite');
 }
-const is_occupying_gpu = (wr) => __awaiter(void 0, void 0, void 0, function* () {
-    const r = yield octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs', { owner: owner, repo: repo, run_id: wr.id });
-    var pull_requests = wr.pull_requests;
-    if (pull_requests.length == 0) {
-        pull_requests = [{ number: '?' }];
-    }
-    const pr = wr.pull_requests.length > 0 ? wr.pull_requests.map((pr) => '#' + pr.number).join(', ') : "#?";
-    console.log(wr.id, wr.status, pr, wr.name);
-    console.log(wr.html_url);
-    var table = new Table();
-    r.data.jobs.map((j, job_i) => table.push([
-        j.name, j.status, is_gpu_job(j) ? "GPU" : "-"
-    ]));
-    console.log(table.toString());
-    const gpu_jobs_in_progress = r.data.jobs.filter(j => is_gpu_job(j) && j.status == 'in_progress');
-    const jobs_all_queued = r.data.jobs.filter(j => is_gpu_job(j))
-        .every(j => j.status == 'queued' || j.status == 'in_progress');
-    const schedule_job = r.data.jobs.find(j => j.name == 'Wait for GPU slots');
-    const test_suite_job_completed = r.data.jobs.filter(j => is_test_suite_job(j) && j.status == 'completed');
-    const test_suite_job_all = r.data.jobs.filter(j => is_test_suite_job(j));
-    const has_passed_scheduler = (schedule_job && schedule_job.status == 'completed') && jobs_all_queued && test_suite_job_completed.length != test_suite_job_all.length;
-    return has_passed_scheduler || gpu_jobs_in_progress.length > 0;
-});
-const num_in_progress_runs = function (statuses) {
+function is_occupying_gpu(wr) {
     return __awaiter(this, void 0, void 0, function* () {
-        const workflow_runs = (yield Promise.all(statuses.map((s) => __awaiter(this, void 0, void 0, function* () {
-            return yield octokit
-                .request('GET /repos/{owner}/{repo}/actions/runs', { owner: owner, repo: repo, status: s })
-                .then(r => r.data.workflow_runs)
-                .catch(e => []);
+        const r = yield octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs', { owner, repo, run_id: wr.id });
+        const pr = wr.pull_requests === null || wr.pull_requests.length === 0
+            ? '#?'
+            : wr.pull_requests.map(x => `#${x.number}`).join(', ');
+        core.info(wr.html_url);
+        core.info(`${wr.id} ${wr.status} ${pr} ${wr.name}`);
+        const table = new cli_table3_1.default();
+        r.data.jobs.map(j => table.push([j.name, j.status, is_gpu_job(j) ? 'GPU' : '-']));
+        core.info(table.toString());
+        const gpu_jobs_in_progress = r.data.jobs.filter(j => is_gpu_job(j) && j.status === 'in_progress');
+        const jobs_all_queued = r.data.jobs
+            .filter(j => is_gpu_job(j))
+            .every(j => j.status === 'queued' || j.status === 'in_progress');
+        const schedule_job = r.data.jobs.find(j => j.name === 'Wait for GPU slots');
+        const test_suite_job_completed = r.data.jobs.filter(j => is_test_suite_job(j) && j.status === 'completed');
+        const test_suite_job_all = r.data.jobs.filter(j => is_test_suite_job(j));
+        const has_passed_scheduler = schedule_job &&
+            schedule_job.status === 'completed' &&
+            jobs_all_queued &&
+            test_suite_job_completed.length !== test_suite_job_all.length;
+        return has_passed_scheduler || gpu_jobs_in_progress.length > 0;
+    });
+}
+function num_in_progress_runs(statuses) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let workflow_runs = (yield Promise.all(statuses.map((s) => __awaiter(this, void 0, void 0, function* () {
+            const r = yield octokit.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner,
+                repo,
+                status: s
+            });
+            return r.data.workflow_runs;
         })))).flat();
-        console.log('found', workflow_runs.length, 'workflow runs for', statuses);
-        if (workflow_runs.length == 0) {
-            console.log('no workflow runs found for', statuses);
-            console.log('start querying 100 workflow runs');
-            const test_workflow_id = "test.yml";
-            yield octokit.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
-                owner: owner,
-                repo: repo,
+        core.info(`found ${workflow_runs.length}, 'workflow runs for', ${statuses}`);
+        if (workflow_runs.length === 0) {
+            core.info(`no workflow runs found for ${statuses}`);
+            core.info('start querying 100 workflow runs');
+            const test_workflow_id = 'test.yml';
+            workflow_runs = (yield octokit.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
+                owner,
+                repo,
                 workflow_id: test_workflow_id,
-                per_page: 30,
-            }).then((r => r.data.workflow_runs.filter(w => statuses.includes(w.status))));
-            console.log('found', workflow_runs.length, 'workflow runs in last 100');
+                per_page: 30
+            })).data.workflow_runs.filter(w => w.status && statuses.includes(w.status));
+            core.info(`found ${workflow_runs.length} workflow runs in last 100`);
         }
-        const is_running_list = yield Promise.all(workflow_runs.map((wr) => __awaiter(this, void 0, void 0, function* () { return yield is_occupying_gpu(wr).catch(e => { console.log(e); return false; }); })));
-        var table = new Table();
+        const is_running_list = yield Promise.all(workflow_runs.map((wr) => __awaiter(this, void 0, void 0, function* () { return yield is_occupying_gpu(wr); })));
+        const table = new cli_table3_1.default();
         workflow_runs.map((wr, wr_i) => {
             table.push([
                 wr.id,
                 is_running_list[wr_i] ? 'running' : '--',
-                (wr.pull_requests || []).map(pr => '#' + pr.number).join(", "),
-                (wr.pull_requests || []).map(pr => 'https://github.com/Oneflow-Inc/oneflow/pull/' + pr.number).join("\n"),
-                wr.html_url,
+                (wr.pull_requests || []).map(pr => `#${pr.number}`).join(', '),
+                (wr.pull_requests || [])
+                    .map(pr => `https://github.com/Oneflow-Inc/oneflow/pull/${pr.number}`)
+                    .join('\n'),
+                wr.html_url
             ]);
         });
-        console.log(table.toString());
+        core.info(table.toString());
         return is_running_list.filter(is_running => is_running).length;
     });
-};
-const sleep = __webpack_require__(1669).promisify(setTimeout);
+}
+const sleep = util.promisify(setTimeout);
 function start() {
     return __awaiter(this, void 0, void 0, function* () {
         let i = 0;
         const is_ci = process.env.CI;
-        const max_try = is_ci ? 40 : 2;
+        const max_try = is_ci ? 45 : 2;
         const timeout_minutes = 1;
-        let max_num_parallel = 1;
+        const max_num_parallel = 1;
         while (i < max_try) {
-            var num = 100000;
+            let num = 100000;
             try {
                 num = yield num_in_progress_runs(['in_progress', 'queued']);
+                core.info(`try  ${i + 1}/${max_try}, timeout ${timeout_minutes} minutes`);
+                core.info(`runs ${num}, max: ${max_num_parallel}`);
             }
             catch (error) {
-                console.log(error);
+                core.setFailed(JSON.stringify(error, null, 2));
             }
-            finally {
-                console.log('try', i + 1, '/', max_try);
-                console.log('runs:', num, ',', 'max:', max_num_parallel);
-                if (num < max_num_parallel) {
-                    return; // success
-                }
-                const timeout = 60 * timeout_minutes;
-                yield sleep(timeout * 1000);
-                console.log('timeout', timeout, 's');
+            if (num < max_num_parallel) {
+                break; // success
             }
+            const timeout = 60 * timeout_minutes;
+            yield sleep(timeout * 1000);
             i += 1;
         }
     });
 }
-start().catch(error => {
-    const core = __webpack_require__(2186);
-    core.setFailed(error.message);
-});
+start();
 
 
 /***/ }),
